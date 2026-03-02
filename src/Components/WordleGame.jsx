@@ -1,40 +1,82 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { vowels, consonants, letterIdMap, gujaratiLettersWithIds } from '../constants/gujaratiletters';
-import { getWordleFeedback } from '../Utils/WordleLogic';
+import { gujaratiBarakhadi } from '../constants/gujaratiletters';
+import { getWordleFeedback, getBarakhadiId } from '../Utils/WordleLogic';
+import { isValidGujaratiWord } from '../Utils/Dictionary';
 import Navbar from '../Components/Navbar';
 
-const idLetterMap = gujaratiLettersWithIds.reduce((map, obj) => {
-  map[obj.id] = obj.letter;
+const idLetterMap = gujaratiBarakhadi.reduce((map, obj) => {
+  map[obj.id] = obj.gu;
   return map;
 }, {});
 
-const TARGET_WORD = ['10048', '10041', '10034']; // Example target word
+const TARGET_WORD = [14, 21, 230]; // Example target word (update as needed)
 
 const WordleGame = () => {
   const [currentGuess, setCurrentGuess] = useState([]);
   const [guesses, setGuesses] = useState([]);
-  const maxLength = TARGET_WORD.length;
+  const maxConsonants = 5;
   const navigate = useNavigate();
 
-  const handleLetterClick = (letter) => {
-    const letterId = letterIdMap[letter];
-    if (letterId && currentGuess.length < maxLength) {
-      setCurrentGuess((prev) => [...prev, letterId]);
+  // Track last consonant pressed for combining
+  const [lastConsonantId, setLastConsonantId] = useState(null);
+
+  // Improved input logic
+  const isConsonant = (id) => {
+    // Assuming consonant ids start from 13 and are every 12th after that
+    return id >= 13 && ((id - 13) % 12 === 0);
+  };
+
+  const countConsonants = (guessArr) => guessArr.filter(isConsonant).length;
+
+  const handleVowelClick = (vowelId) => {
+    if (lastConsonantId && currentGuess.length > 0) {
+      const combinedId = getBarakhadiId(lastConsonantId, vowelId);
+      if (combinedId) {
+        // Replace last consonant with combined
+        const newGuess = [...currentGuess.slice(0, -1), combinedId];
+        if (countConsonants(newGuess) <= maxConsonants) {
+          setCurrentGuess(newGuess);
+        }
+        setLastConsonantId(null);
+        return;
+      }
     }
+    // Direct vowel input
+    setCurrentGuess((prev) => {
+      if (countConsonants(prev) <= maxConsonants) {
+        return [...prev, vowelId];
+      }
+      return prev;
+    });
+    setLastConsonantId(null);
+  };
+
+  const handleConsonantClick = (consonantId) => {
+    setCurrentGuess((prev) => {
+      if (countConsonants(prev) < maxConsonants) {
+        return [...prev, consonantId];
+      }
+      return prev;
+    });
+    setLastConsonantId(consonantId);
   };
 
   const handleDelete = () => {
     setCurrentGuess((prev) => prev.slice(0, -1));
+    setLastConsonantId(null);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (currentGuess.length !== maxLength) {
-      alert(`Word must be ${maxLength} letters.`);
+    if (countConsonants(currentGuess) !== maxConsonants) {
+      alert(`Word must have exactly ${maxConsonants} consonants.`);
       return;
     }
-
+    if (!isValidGujaratiWord(currentGuess)) {
+      alert('Not a valid Gujarati word!');
+      return;
+    }
     const feedback = getWordleFeedback(currentGuess, TARGET_WORD);
     setGuesses((prev) => [...prev, feedback]);
     setCurrentGuess([]);
@@ -98,8 +140,8 @@ const WordleGame = () => {
               className="wordle-input"
             />
             <div className="input-buttons">
-              <button type="submit" className="button" disabled={attemptCount >= 6}>SUBMIT</button>
-              <button type="button" onClick={handleDelete} className="button">DEL</button>
+              <button type="submit" className="button submit" disabled={attemptCount >= 6}>SUBMIT</button>
+                <button type="button" onClick={handleDelete} className="button delete">DELETE</button>
             </div>
             <br /><br />
           </form>
@@ -112,25 +154,23 @@ const WordleGame = () => {
           </div>
         )}
 
-        <div className="keyboard-row">
-          <div className="keyboard-column">
-            <div className="keyboard-grid-vo">
-              {vowels.map((vowel, i) => (
-                <button key={i} onClick={() => handleLetterClick(vowel)} className="key-button" disabled={failed || success}>
-                  {vowel}
-                </button>
-              ))}
-            </div>
+        <div className="keyboard-split-container">
+          <div className="keyboard-split-divider"></div>
+          <div className="vowel-box">
+            {/* Vowel keys: ids 1-12, split into 2 rows */}
+            {gujaratiBarakhadi.slice(0, 12).map((vowel, i) => (
+              <button key={vowel.id} onClick={() => handleVowelClick(vowel.id)} className="key-button" disabled={failed || success}>
+                {vowel.gu}
+              </button>
+            ))}
           </div>
-
-          <div className="keyboard-column">
-            <div className="keyboard-grid-co">
-              {consonants.map((consonant, i) => (
-                <button key={i} onClick={() => handleLetterClick(consonant)} className="key-button" disabled={failed || success}>
-                  {consonant}
-                </button>
-              ))}
-            </div>
+          <div className="consonant-box">
+            {/* Consonant keys: ids 13, 25, 37, ... (first of each block) */}
+            {gujaratiBarakhadi.filter((l, i) => (l.id >= 13 && (l.id - 13) % 12 === 0)).map((consonant, i) => (
+              <button key={consonant.id} onClick={() => handleConsonantClick(consonant.id)} className={`key-button${lastConsonantId === consonant.id ? ' selected' : ''}`} disabled={failed || success} style={lastConsonantId === consonant.id ? { backgroundColor: '#00796b', color: '#fff' } : {}}>
+                {consonant.gu}
+              </button>
+            ))}
           </div>
         </div>
       </div>

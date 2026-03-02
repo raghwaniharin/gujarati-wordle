@@ -1,4 +1,80 @@
-body,html,#root {
+/* Keyboard container for split layout */
+.keyboard-split-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 2rem;
+  min-height: 220px;
+}
+
+/* Imaginary vertical line at 50% */
+.keyboard-split-divider {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  height: 100%;
+  width: 0;
+  border-left: 2px dashed #bbb;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Vowel box: 2 rows, columns auto, right side 10px from divider */
+.vowel-box {
+  display: grid;
+  grid-template-rows: repeat(2, 1fr);
+  grid-auto-flow: column;
+  gap: 8px;
+  position: absolute;
+  right: 50%;
+  transform: translateX(-10px);
+  z-index: 2;
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Consonant box: 3 rows, fixed columns, left side 10px from divider */
+.consonant-box {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  gap: 8px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(10px);
+  z-index: 2;
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+@media (max-width: 900px) {
+  .keyboard-split-container {
+    flex-direction: column;
+    min-height: 320px;
+  }
+  .vowel-box, .consonant-box {
+    position: static;
+    transform: none;
+    margin: 0 auto 16px auto;
+    width: 95vw;
+    max-width: 100%;
+    box-shadow: none;
+  }
+  .keyboard-split-divider {
+    display: none;
+  }
+}
+
+body,
+html,
+#root
+{
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
@@ -7,29 +83,55 @@ body,html,#root {
   height: 100%;
 }
 
-h1, h2 {
+h1,
+h2
+{
   color: #222;
 }
 
-.button {
+.button
+{
   margin-top: 30px;
-  padding: 12px 24px;
-  font-size: 18px;
+  padding: 0.75rem 2rem;
+  font-size: 1.25rem;
   border-radius: 8px;
-  background-color: #008080;
-  color: black;
   border: none;
   cursor: pointer;
+  min-width: 80px;
+  min-height: 40px;
+  max-width: 220px;
+  transition: background 0.2s, color 0.2s;
+}
+.button.submit
+{
+  background-color: #2ecc40;
+  color: #fff;
+  font-weight: bold;
+}
+.button.delete
+{
+  background-color: #e74c3c;
+  color: #fff;
+  font-weight: bold;
+}
+.button:active
+{
+  filter: brightness(0.9);
 }
 
-.container {
+.container
+{
   max-width: 1000px;
   margin: 2rem auto;
   font-family: 'Noto Sans Gujarati', sans-serif;
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1rem;
 }
 
-.wordle-input {
+.wordle-input
+{
   font-size: 2rem;
   text-align: center;
   margin-bottom: 1rem;
@@ -38,45 +140,80 @@ h1, h2 {
   font-family: 'Noto Sans Gujarati', sans-serif;
 }
 
-.input-buttons {
+.input-buttons
+{
   margin-bottom: 1rem;
   display: flex;
   justify-content: center;
   gap: 0.5rem;
 }
 
-.keyboard {
-  margin-bottom: 2rem;
-}
-.keyboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-  max-width: 500px;
-  margin: auto;
-}
-
-.key-button {
-  font-size: 1.5rem;
-  padding: 0.5rem;
+.key-button
+{
+  font-size: 1.25rem;
+  padding: 0.5rem 1rem;
   font-family: 'Noto Sans Gujarati', sans-serif;
-  background-color: #eee;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  background-color: #f5f5f5;
+  border: 1px solid #bbb;
+  border-radius: 6px;
   cursor: pointer;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 60px;
+  box-sizing: border-box;
+  color: #222;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.key-button.selected
+{
+  background-color: #282f28;
+  color: #fff;
 }
 
-.guesses {
+.keyboard-row
+{
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.keyboard-column
+{
+  flex: 1;
+  min-width: 200px;
+  width: 100%;
+}
+
+.keyboard-grid-co,
+.keyboard-grid-vo
+{
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
+.guesses
+{
   margin-top: 2rem;
 }
 
-.guess-row {
+.guess-row
+{
   display: flex;
   justify-content: center;
   gap: 0.5rem;
   margin: 0.5rem 0;
 }
 
-.guess-box {
+.guess-box
+{
   width: 2.5rem;
   height: 2.5rem;
   line-height: 2.5rem;
@@ -87,41 +224,64 @@ h1, h2 {
   color: white;
 }
 
-.green {
+.green
+{
+  min-width: 40px;
+  min-height: 40px;
+  box-sizing: border-box;
   background-color: green;
 }
-
-.yellow {
+.yellow
+{
   background-color: gold;
 }
-
-.grey {
+.grey
+{
   background-color: lightgrey;
   color: darkgrey;
 }
 
-
-.keyboard-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 2rem;
-  flex-wrap: wrap;
+@media (max-width: 600px)
+{
+  .container
+  {
+    padding: 0.5rem;
+    max-width: 100vw;
+  }
+  .keyboard-row
+  {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100vw;
+    overflow-x: auto;
+  }
+  .keyboard-column
+  {
+    width: 100vw;
+    min-width: unset;
+    align-items: flex-start;
+  }
+  .keyboard-grid-co,
+  .keyboard-grid-vo
+  {
+    grid-template-columns: repeat(auto-fit, minmax(32px, 1fr));
+    width: 100vw;
+    gap: 2px;
+  }
+  .key-button
+  {
+    font-size: 1rem;
+    padding: 0.5vw 1vw;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 12vw;
+  }
+  .button
+  {
+    font-size: 3vw;
+    padding: 2vw 6vw;
+    min-width: 60px;
+    min-height: 32px;
+    max-width: 60vw;
+  }
 }
-
-.keyboard-column {
-  flex: 1;
-  min-width: 200px;
-  
-}
-
-.keyboard-grid-co {
-  display: grid;
-  grid-template-columns: auto auto auto auto auto auto auto auto auto auto auto auto ; /* Adjust to 8 or 9 for fewer rows */
-  gap: 4px;
-}
-.keyboard-grid-vo {
-  display: grid;
-  grid-template-columns: auto auto auto auto auto auto  ; /* Adjust to 8 or 9 for fewer rows */
-  gap: 4px;
-}
-
